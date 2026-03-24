@@ -1,4 +1,5 @@
 // Importamos las dependencias necesarias
+const { time } = require("console");
 const express = require("express");
 const fileUpload = require("express-fileupload");
 const fs = require("fs");
@@ -6,8 +7,14 @@ const path = require("path");
 
 const app = express();
 
+// Configuración segura de subida de archivos
 // Activamos el middleware que permite recibir archivos desde el cliente
-app.use(fileUpload());
+app.use(fileUpload({
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  abortOnLimit: true,
+  createParentPath: true
+}));
+
 
 // Permite trabajar con JSON en las peticiones
 app.use(express.json());
@@ -21,7 +28,6 @@ const PORT = 3000;
 /*
 Endpoint para subir archivos
 Recibe dos archivos:
-- cv (curriculum)
 - avatar (imagen de perfil)
 */
 app.post("/upload/avatar/:userId", (req, res) => {
@@ -53,12 +59,28 @@ app.post("/upload/avatar/:userId", (req, res) => {
     });
   }
 
+  // MIME TYPE (SEGURIDAD REAL)
+  const allowedMime = [
+    "image/jpeg",
+    "image/png",
+    "image/tiff",
+    "image/bmp",
+    "image/gif"
+  ];
+
+  if (!allowedMime.includes(avatar.mimetype)) {
+    return res.status(400).json({
+      ok: false,
+      msg: "Tipo de archivo no válido",
+    });
+  }
   // Generamos un timestamp para evitar nombres duplicados
   //const timestamp = Date.now();
 
   // Creamos nombres únicos para los archivos
   // Ejemplo: 1-1710000000.pdf
-  const avatarName = `${userId}.${extension}`;
+  time
+  const avatarName = `${userId}-${Date.now()}.${extension}`;
 
   // Definimos las rutas donde se guardarán los archivos
   const avatarPath = `uploads/avatar/${avatarName}`;
@@ -82,6 +104,7 @@ app.post("/upload/avatar/:userId", (req, res) => {
         msg: "Archivos subidos correctamente",
         data: {
           avatar: avatarName,
+          url: `/uploads/avatar/${avatarName}`
         },
       });
     });
@@ -111,7 +134,7 @@ function deleteIfExists(folder, userId) {
 Endpoint para obtener el avatar de un 
 Busca el archivo por userId
 */
-app.get("//:userId/avatar", (req, res) => {
+app.get("/avatar/:userId", (req, res) => {
   const files = fs.readdirSync("uploads/avatar");
 
   const file = files.find((f) => f.startsWith(req.params.userId));
