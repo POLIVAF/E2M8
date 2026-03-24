@@ -41,12 +41,12 @@ app.post("/upload/avatar/:userId", (req, res) => {
 
   // Obtenemos la extensión del archivo usando path.extname()
   // Esto devuelve algo como ".pdf" o ".jpg"
-  const extAvatar = avatar.name.split(".").pop().toLowerCase(); // Obtenemos la extensión sin el punto
+  const extension = avatar.name.split(".").pop().toLowerCase(); // Obtenemos la extensión sin el punto
   // Definimos las extensiones permitidas
   const allowedImg = ["jpg", "jpeg", "png","tiff", "bmp", "gif"];
   
   // Validamos el tipo de archivo de la imagen
-  if (!allowedImg.includes(extAvatar)) {
+  if (!allowedImg.includes(extension)) {
     return res.status(400).json({
       ok: false,
       msg: "Formato de imagen no permitido",
@@ -54,11 +54,11 @@ app.post("/upload/avatar/:userId", (req, res) => {
   }
 
   // Generamos un timestamp para evitar nombres duplicados
-  const timestamp = Date.now();
+  //const timestamp = Date.now();
 
   // Creamos nombres únicos para los archivos
   // Ejemplo: 1-1710000000.pdf
-  const avatarName = `${userId}-${timestamp}${extAvatar}`;
+  const avatarName = `${userId}.${extension}`;
 
   // Definimos las rutas donde se guardarán los archivos
   const avatarPath = `uploads/avatar/${avatarName}`;
